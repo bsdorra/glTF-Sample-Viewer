@@ -4,6 +4,7 @@ import { glTF } from './gltf.js';
 import { gltfLoader } from './loader.js';
 import { gltfModelPathProvider } from './model_path_provider.js';
 import { gltfRenderer } from './renderer.js';
+import { PathtracingRenderer } from './renderer_pt.js';
 import { gltfRenderingParameters, Environments, UserCameraIndex } from './rendering_parameters.js';
 import { gltfUserInterface } from './user_interface.js';
 import { UserCamera } from './user_camera.js';
@@ -57,6 +58,7 @@ class gltfViewer
 
         // Holds the last camera index, used for scene scaling when changing to user camera.
         this.prevCameraIndex = null;
+        this.cameraHasChanged = false;
 
         if (this.headless === true)
         {
@@ -105,6 +107,8 @@ class gltfViewer
         this.userCamera.aspectRatio = aspectRatio;
         this.userCamera.xmag = xmag;
         this.userCamera.ymag = ymag;
+
+        this.cameraHasChanged = true;
     }
 
     setAnimation(animationIndex = 'all', play = false, timeInSec = undefined)
@@ -134,6 +138,7 @@ class gltfViewer
             if (this.renderingParameters.userCameraActive())
             {
                 this.userCamera.rotate(deltaX, deltaY);
+                this.cameraHasChanged = true;
             }
         };
         input.onPan = (deltaX, deltaY) =>
@@ -141,6 +146,7 @@ class gltfViewer
             if (this.renderingParameters.userCameraActive())
             {
                 this.userCamera.pan(deltaX, deltaY);
+                this.cameraHasChanged = true;
             }
         };
         input.onZoom = (delta) =>
@@ -148,6 +154,7 @@ class gltfViewer
             if (this.renderingParameters.userCameraActive())
             {
                 this.userCamera.zoomIn(delta);
+                this.cameraHasChanged = true;
             }
         };
         input.onResetCamera = () =>
@@ -335,6 +342,13 @@ class gltfViewer
                         }
                     }
 
+                    if(self.cameraHasChanged == true) {
+                        self.cameraHasChanged = false;
+                        if(self.renderer.glslRaytracer) {
+                            self.renderer.glslRaytracer.lastFrameChanged = true;
+                        }
+                    }
+
                     if(hasBlendPrimitives)
                     {
                         // Draw all opaque and masked primitives. Depth sort is not yet required.
@@ -452,6 +466,17 @@ class gltfViewer
             else
             {
                 self.loadFromFileObject(this.lastDropped.mainFile, this.lastDropped.additionalFiles);
+            }
+        };
+        gui.onRenderBackendChanged = () =>
+        {
+            if( this.renderingParameters.usePathtracing == false) {
+                this.renderer = new gltfRenderer(canvas, this.userCamera, this.renderingParameters, this.basePath);
+            }
+            else {
+                console.log("WARNING: Pathtracing render mode not supported yet!")
+                this.renderer = new PathtracingRenderer(canvas, this.userCamera, this.renderingParameters, this.basePath);
+                this.renderer.glslRaytracer.prepareData(this.gltf, this.sceneScaleFactor);
             }
         };
         gui.initialize();

@@ -12,7 +12,8 @@ class gltfRenderingParameters
         exposure = 1.0,
         clearColor = [50, 50, 50],
         toneMap = ToneMaps.LINEAR,
-        debugOutput = DebugOutput.NONE)
+        debugOutput = DebugOutput.NONE,
+        usePathtracing = false)
     {
         this.environmentName = environmentName;
         this.useIBL = useIBL;
@@ -27,6 +28,7 @@ class gltfRenderingParameters
         this.animationIndex = "all";
         this.skinning = true;
         this.morphing = true;
+        this.usePathtracing = usePathtracing;
     }
 
     userCameraActive()

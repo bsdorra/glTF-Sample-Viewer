@@ -22,6 +22,7 @@ class gltfUserInterface
 
         this.onModelChanged = undefined;
         this.onEnvironmentChanged = undefined;
+        this.onRenderBackendChanged = undefined;
 
         this.playAnimation = false;
     }
@@ -32,6 +33,7 @@ class gltfUserInterface
 
         this.initializeGltfFolder();
         this.initializeLightingSettings();
+        this.initializeRenderSettings();
         this.initializeDebugSettings();
         this.initializeMonitoringView();
     }
@@ -110,6 +112,13 @@ class gltfUserInterface
             return self.gltfFolder.add(self.renderingParameters, "cameraIndex", indices).name("Camera Index");
         }
         this.initializeUpdatable(this.gltfFolder, createElement);
+    }
+
+    initializeRenderSettings()
+    {
+        const self = this;
+        const renderSettingsFolder = this.gui.addFolder("Render Settings");
+        renderSettingsFolder.add(this.renderingParameters, "usePathtracing").name("Use PathTracing").onChange(() => self.onRenderBackendChanged());
     }
 
     initializeLightingSettings()
